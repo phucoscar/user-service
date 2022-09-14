@@ -50,7 +50,7 @@ public class UserController  {
                                               @RequestParam String name,
                                               @RequestParam String password,
                                               @RequestParam String email,
-                                              @RequestBody MultipartFile image) throws IOException {
+                                              @RequestParam MultipartFile image) throws IOException {
        Optional<User> optionalUser = userService.findById(id);
        if (!optionalUser.isPresent()) {
            return new ResponseEntity<>("User not found",HttpStatus.NOT_FOUND);
