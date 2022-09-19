@@ -109,7 +109,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<?> checkLogin(UserRequest userRequest) {
+    public UserResponse checkLogin(UserRequest userRequest) {
         UserResponse userResponse = null;
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -122,11 +122,10 @@ public class UserServiceImpl implements UserService {
             String token = jwtUtil.genarateToken(user.getUsername());
             userResponse = new UserResponse();
             userResponse.setToken(token);
-            return ResponseEntity.ok(userResponse);
         } catch (BadCredentialsException e ) {
             System.out.println(e);
         }
-        return new ResponseEntity<>(userResponse, HttpStatus.UNAUTHORIZED);
+        return userResponse;
     }
 
 }

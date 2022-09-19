@@ -25,5 +25,5 @@ public interface UserService {
 
     Optional<User> findByUsername(String username);
 
-    public ResponseEntity<?> checkLogin(UserRequest userRequest);
+    public UserResponse checkLogin(UserRequest userRequest);
 }

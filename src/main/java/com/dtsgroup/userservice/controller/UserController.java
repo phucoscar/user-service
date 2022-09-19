@@ -48,7 +48,10 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserRequest userRequest) {
-        return userService.checkLogin(userRequest);
+        UserResponse userResponse = userService.checkLogin(userRequest);
+        if (userResponse != null)
+            return new ResponseEntity<>(userResponse, HttpStatus.ACCEPTED);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @PostMapping(value = "/create", consumes = {MediaType.APPLICATION_JSON_VALUE , MediaType.MULTIPART_FORM_DATA_VALUE})
