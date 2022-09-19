@@ -1,81 +1,88 @@
 package com.dtsgroup.userservice.controller;
 
+import com.dtsgroup.userservice.dto.UserDTO;
 import com.dtsgroup.userservice.entity.User;
+import com.dtsgroup.userservice.dto.UserRequest;
+import com.dtsgroup.userservice.dto.UserResponse;
 import com.dtsgroup.userservice.service.UserService;
+import com.dtsgroup.userservice.util.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
-import java.util.Optional;
+
 
 @RestController
-@RequestMapping("/api/user")
-public class UserController  {
-    private static final String CURRENT_URL = "src\\main\\resources\\static\\images";
+@RequestMapping("/api")
+public class UserController {
+
     @Autowired
     private UserService userService;
 
-    @GetMapping
+    @Autowired
+    private JWTUtil util;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+
+
+    @GetMapping("/users")
     public List<User> findAll() {
         return userService.findAll();
     }
 
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestParam String name,
-                                           @RequestParam String password,
-                                           @RequestParam String email,
-                                           @RequestParam MultipartFile image) throws IOException {
-        String fileLocation = new File( CURRENT_URL).getAbsolutePath() + "\\" + image.getOriginalFilename();
-        OutputStream out = new FileOutputStream(fileLocation);
-        out.write(image.getBytes());
-        out.close();
-        User user = new User();
-        user.setName(name);
-        user.setEmail(email);
-        user.setPassword(password);
-        user.setImage(image.getOriginalFilename());
-        userService.save(user);
-        return new ResponseEntity<>(user, HttpStatus.CREATED);
-    }
+//    @GetMapping
+//    public List<User> getAllUsers(@RequestParam(value = "page", defaultValue = "0") int page,
+//                                  @RequestParam(value = "limit", defaultValue = "10") int limit) {
+//        List<User> users = new ArrayList<>();
+//        return null;
+//    }
 
-    @PutMapping("{id}")
-    public ResponseEntity<Object> updateUser (@PathVariable String id,
-                                              @RequestParam String name,
-                                              @RequestParam String password,
-                                              @RequestParam String email,
-                                              @RequestBody MultipartFile image) throws IOException {
-       Optional<User> optionalUser = userService.findById(id);
-       if (!optionalUser.isPresent()) {
-           return new ResponseEntity<>("User not found",HttpStatus.NOT_FOUND);
-       }
-       String fileLocation = new File(CURRENT_URL).getAbsolutePath() + "\\" + image.getOriginalFilename();
-       OutputStream out = new FileOutputStream(fileLocation);
-       out.write(image.getBytes());
-       out.close();
-       User updateUser = optionalUser.get();
-       updateUser.setName(name);
-       updateUser.setEmail(email);
-       updateUser.setPassword(password);
-       updateUser.setImage(image.getOriginalFilename());
-       userService.save(updateUser);
-       return new ResponseEntity<>(updateUser, HttpStatus.OK);
-    }
 
-    @DeleteMapping("{id}")
-    public ResponseEntity<Object> deleteUser(@PathVariable String id) {
-        Optional<User> optionalUser = userService.findById(id);
-        if (!optionalUser.isPresent()) {
-            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody UserRequest userRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            userRequest.getUsername(),
+                            userRequest.getPassword()
+                    )
+            );
+            User user = (User) authentication.getPrincipal();
+            String token = util.genarateToken(user.getUsername());
+            return ResponseEntity.ok(new UserResponse(token));
+        } catch (BadCredentialsException e ) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        User user = optionalUser.get();
-        userService.delete(user);
+    }
+
+    @PostMapping(value = "/create", consumes = {MediaType.APPLICATION_JSON_VALUE , MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<User> createUser(@RequestPart UserDTO userDTO,
+                                           @RequestPart MultipartFile image) throws IOException {
+        return new ResponseEntity<>(userService.save(userDTO, image), HttpStatus.CREATED);
+    }
+
+    @PutMapping(value = "update/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<Object> updateUser(@PathVariable String id,
+                                             @RequestPart UserDTO userDTO,
+                                             @RequestPart MultipartFile image) throws IOException {
+        User user = userService.update(id, userDTO, image);
         return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<Object> deleteUser(@PathVariable String id) {
+        userService.delete(id);
+        return new ResponseEntity<>(id, HttpStatus.OK);
     }
 }
