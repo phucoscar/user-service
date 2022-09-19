@@ -1,5 +1,6 @@
 package com.dtsgroup.userservice.security;
 
+import com.dtsgroup.userservice.repository.UserRepository;
 import com.dtsgroup.userservice.security.filter.JwtRequestFilter;
 import com.dtsgroup.userservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +19,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    private UserService userService;
+    private UserRepository userRepository;
 
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(username -> userService.findByUsername(username)
+        auth.userDetailsService(username -> userRepository.findByUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("User  " + username + "not found!"))
         );
     }

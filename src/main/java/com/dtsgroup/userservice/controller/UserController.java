@@ -29,41 +29,26 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private JWTUtil util;
-
-    @Autowired
     private AuthenticationManager authenticationManager;
 
-
+    @Autowired
+    private JWTUtil jwtUtil;
 
     @GetMapping("/users")
     public List<User> findAll() {
         return userService.findAll();
     }
 
-//    @GetMapping
-//    public List<User> getAllUsers(@RequestParam(value = "page", defaultValue = "0") int page,
-//                                  @RequestParam(value = "limit", defaultValue = "10") int limit) {
-//        List<User> users = new ArrayList<>();
-//        return null;
+//    @GetMapping("/users")
+//    public List<User> getAllUsers(@RequestParam(value = "page", defaultValue = "0", required = false) int page,
+//                                  @RequestParam(value = "size", defaultValue = "10", required = false) int pageSize) {
+//        return userService.findAll(page, pageSize);
 //    }
 
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserRequest userRequest) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            userRequest.getUsername(),
-                            userRequest.getPassword()
-                    )
-            );
-            User user = (User) authentication.getPrincipal();
-            String token = util.genarateToken(user.getUsername());
-            return ResponseEntity.ok(new UserResponse(token));
-        } catch (BadCredentialsException e ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        return userService.checkLogin(userRequest);
     }
 
     @PostMapping(value = "/create", consumes = {MediaType.APPLICATION_JSON_VALUE , MediaType.MULTIPART_FORM_DATA_VALUE})

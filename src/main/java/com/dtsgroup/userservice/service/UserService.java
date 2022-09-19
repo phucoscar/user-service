@@ -1,12 +1,12 @@
 package com.dtsgroup.userservice.service;
 
 import com.dtsgroup.userservice.dto.UserDTO;
+import com.dtsgroup.userservice.dto.UserRequest;
+import com.dtsgroup.userservice.dto.UserResponse;
 import com.dtsgroup.userservice.entity.User;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -24,4 +24,6 @@ public interface UserService {
     public User update(String id, UserDTO userDTO, MultipartFile image) throws IOException;
 
     Optional<User> findByUsername(String username);
+
+    public ResponseEntity<?> checkLogin(UserRequest userRequest);
 }

@@ -1,15 +1,20 @@
 package com.dtsgroup.userservice.service.Impl;
 
 import com.dtsgroup.userservice.dto.UserDTO;
+import com.dtsgroup.userservice.dto.UserRequest;
+import com.dtsgroup.userservice.dto.UserResponse;
 import com.dtsgroup.userservice.entity.User;
 import com.dtsgroup.userservice.exception.BusinessException;
 import com.dtsgroup.userservice.repository.UserRepository;
 import com.dtsgroup.userservice.service.UserService;
+import com.dtsgroup.userservice.util.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,7 +23,6 @@ import java.io.*;
 import java.util.List;
 import java.util.Optional;
 
-;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -31,9 +35,18 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JWTUtil jwtUtil;
+
     @Override
     public List<User> findAll() {
         return userRepository.findAll();
+//        Pageable pageable = (Pageable) PageRequest.of(page, pageSize);
+//        Page<User> pageResult = userRepository.findAll(pageable);
+//        return pageResult.toList();
     }
 
     @Override
@@ -93,6 +106,27 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    @Override
+    public ResponseEntity<?> checkLogin(UserRequest userRequest) {
+        UserResponse userResponse = null;
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            userRequest.getUsername(),
+                            userRequest.getPassword()
+                    )
+            );
+            User user = (User) authentication.getPrincipal();
+            String token = jwtUtil.genarateToken(user.getUsername());
+            userResponse = new UserResponse();
+            userResponse.setToken(token);
+            return ResponseEntity.ok(userResponse);
+        } catch (BadCredentialsException e ) {
+            System.out.println(e);
+        }
+        return new ResponseEntity<>(userResponse, HttpStatus.UNAUTHORIZED);
     }
 
 }
