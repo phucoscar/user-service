@@ -1,4 +1,4 @@
-package com.dtsgroup.userservice.security.filter;
+package com.dtsgroup.userservice.config.filter;
 
 import com.dtsgroup.userservice.entity.User;
 import com.dtsgroup.userservice.exception.BusinessException;

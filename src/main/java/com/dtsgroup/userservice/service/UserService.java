@@ -4,10 +4,10 @@ import com.dtsgroup.userservice.dto.UserDTO;
 import com.dtsgroup.userservice.dto.UserRequest;
 import com.dtsgroup.userservice.dto.UserResponse;
 import com.dtsgroup.userservice.entity.User;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +26,6 @@ public interface UserService {
     Optional<User> findByUsername(String username);
 
     public UserResponse checkLogin(UserRequest userRequest);
+
+    public HashMap<String, Integer> getOrders(String userId);
 }

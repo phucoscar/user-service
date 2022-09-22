@@ -1,8 +1,7 @@
-package com.dtsgroup.userservice.security;
+package com.dtsgroup.userservice.config.security;
 
 import com.dtsgroup.userservice.repository.UserRepository;
-import com.dtsgroup.userservice.security.filter.JwtRequestFilter;
-import com.dtsgroup.userservice.service.UserService;
+import com.dtsgroup.userservice.config.filter.JwtRequestFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,9 +41,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.csrf()
                 .disable()
                 .authorizeRequests()
-                .antMatchers("/api/login").permitAll()
+                .antMatchers("/api/user/login/**").permitAll()
                 .anyRequest().authenticated();
 
-        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+        //http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
     }
 }

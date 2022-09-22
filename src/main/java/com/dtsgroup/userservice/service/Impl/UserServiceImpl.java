@@ -1,5 +1,6 @@
 package com.dtsgroup.userservice.service.Impl;
 
+import com.dtsgroup.userservice.config.discoveryclient.CartDiscovery;
 import com.dtsgroup.userservice.dto.UserDTO;
 import com.dtsgroup.userservice.dto.UserRequest;
 import com.dtsgroup.userservice.dto.UserResponse;
@@ -8,9 +9,10 @@ import com.dtsgroup.userservice.exception.BusinessException;
 import com.dtsgroup.userservice.repository.UserRepository;
 import com.dtsgroup.userservice.service.UserService;
 import com.dtsgroup.userservice.util.JWTUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,13 +22,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 
 @Service
 public class UserServiceImpl implements UserService {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
     private static final String CURRENT_URL = "src\\main\\resources\\static\\images";
 
     @Autowired
@@ -40,6 +43,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private JWTUtil jwtUtil;
+
+    @Autowired
+    private CartDiscovery cartDiscovery;
 
     @Override
     public List<User> findAll() {
@@ -76,7 +82,7 @@ public class UserServiceImpl implements UserService {
                 throw new BusinessException("User does not exist!", HttpStatus.BAD_REQUEST);
             userRepository.delete(optional.get());
         } catch (BusinessException e) {
-            System.out.println(e);
+            LOGGER.error("User does not exist");
         }
     }
 
@@ -96,9 +102,9 @@ public class UserServiceImpl implements UserService {
             out.close();
             user.setImage(image.getOriginalFilename());
         } catch (BusinessException e) {
-            System.out.println(e);
+            LOGGER.error("User does not exist");
         } catch (IOException e) {
-            System.out.println(e);
+            LOGGER.error("Error with IO");
         }
         return user;
     }
@@ -123,9 +129,15 @@ public class UserServiceImpl implements UserService {
             userResponse = new UserResponse();
             userResponse.setToken(token);
         } catch (BadCredentialsException e ) {
-            System.out.println(e);
+            LOGGER.error("Username or password is invalid");
         }
         return userResponse;
     }
+
+    @Override
+    public HashMap<String, Integer> getOrders(String userId) {
+        return cartDiscovery.getCartByUserId(userId);
+    }
+
 
 }
